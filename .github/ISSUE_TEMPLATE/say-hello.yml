@@ -1,0 +1,26 @@
+name: Say hello
+description: Share an idea, ask about a project, or start a collaboration conversation.
+title: "Hello: "
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for stopping by. This conversation is public; keep personal contact details out of your message."
+  - type: dropdown
+    id: topic
+    attributes:
+      label: What brought you here?
+      options:
+        - AURA / assistants
+        - arise / Android
+        - Skholario / study tools
+        - Websites / collaboration
+        - Just saying hello
+    validations:
+      required: true
+  - type: textarea
+    id: message
+    attributes:
+      label: What's on your mind?
+      description: A question, a small idea, or a project you'd like to talk about.
+    validations:
+      required: true

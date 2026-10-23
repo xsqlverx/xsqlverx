@@ -1,0 +1,41 @@
+name: Refresh profile pulse
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/update_pulse.py'
+      - '.github/workflows/profile-pulse.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: profile-pulse
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: Refresh public repository artwork
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/update_pulse.py
+      - name: Commit refreshed snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/pulse-dark.svg assets/pulse-light.svg README.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh public repository pulse'
+            git push
+          fi
