@@ -18,10 +18,10 @@ I build personal assistants, Android apps, and websites with a little more perso
 
 <p align="center"><code>sqlver@github ~ $ ./contributions.sh</code></p>
 
-<a href="https://github.com/xsqlverx#js-contribution-activity-description"><picture>
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/contributions-dark.svg">
-  <img src="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/contributions-light.svg" alt="Sqlver's animated contribution heatmap. Each square is one day; brighter green means more contributions. Open GitHub's contribution calendar for details." width="100%">
-</picture></a>
+  <img src="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/contributions-light.svg" alt="Sqlver's animated contribution heatmap. Each square is one day; brighter green means more contributions." width="100%">
+</picture>
 
 <!-- heatmap:start -->
 **208 contributions in the last year** · Calendar through 23 Oct 2026.
