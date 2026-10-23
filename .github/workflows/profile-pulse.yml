@@ -1,4 +1,4 @@
-name: Refresh profile pulse
+name: Refresh profile activity
 
 on:
   schedule:
@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/update_pulse.py'
+      - 'scripts/update_heatmap.py'
       - '.github/workflows/profile-pulse.yml'
 
 permissions:
@@ -30,12 +31,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/update_pulse.py
+      - name: Refresh animated contribution calendar
+        run: python scripts/update_heatmap.py
       - name: Commit refreshed snapshot
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/pulse-dark.svg assets/pulse-light.svg README.md
+          git add assets/pulse-dark.svg assets/pulse-light.svg assets/contributions-dark.svg assets/contributions-light.svg README.md
           if ! git diff --cached --quiet; then
-            git commit -m 'Refresh public repository pulse'
+            git commit -m 'Refresh profile activity and contribution heatmap'
             git push
           fi
