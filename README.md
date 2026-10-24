@@ -16,7 +16,7 @@ I build personal assistants, Android apps, and websites with a little more perso
 
 **Currently exploring:** more capable assistants, clearer study workflows, and interfaces that feel as good as they work.
 
-<p align="center"><code>sqlver@github ~ $ ./contributions.sh</code></p>
+
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/contributions-dark.svg">
