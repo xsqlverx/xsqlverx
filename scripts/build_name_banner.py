@@ -4,6 +4,7 @@ The glyph outlines are frozen in name-glyphs.json. Motion uses transforms and
 opacity rather than font-size, letter-spacing, or browser layout changes.
 """
 from pathlib import Path
+from math import cos, sin, pi, tan
 import json
 import re
 
@@ -123,20 +124,67 @@ def make_name(mode):
             f'<g class="kinetic-running">{"".join(words)}</g></g></g></g><!-- /name-kinetic -->')
 
 
+def ellipse_path(center, u, v):
+    """Four cubic arcs: a compact projected circle, error below 0.05 px."""
+    def point(t):
+        return (center[0] + u[0]*cos(t) + v[0]*sin(t),
+                center[1] + u[1]*cos(t) + v[1]*sin(t))
+    def tangent(t):
+        return (-u[0]*sin(t) + v[0]*cos(t), -u[1]*sin(t) + v[1]*cos(t))
+    def xy(p):
+        return f'{p[0]:.2f},{p[1]:.2f}'
+    result = ['M' + xy(point(0))]
+    k = 4/3*tan(pi/8)
+    for i in range(4):
+        a, b = i*pi/2, (i+1)*pi/2
+        p, q, dp, dq = point(a), point(b), tangent(a), tangent(b)
+        c1 = (p[0]+k*dp[0], p[1]+k*dp[1])
+        c2 = (q[0]-k*dq[0], q[1]-k*dq[1])
+        result.append('C' + xy(c1) + ' ' + xy(c2) + ' ' + xy(q))
+    return ' '.join(result) + 'Z'
+
+
+def make_orbit(mode):
+    """Keep the mesh geometry cached; animate one transform and one satellite."""
+    wire, lime = ('#c2aeff','#cff78b') if mode == 'dark' else ('#7650bf','#537e25')
+    def project(x, y, z):
+        a, b = .37, -.38
+        yy = y*cos(a)-z*sin(a)
+        return (x*cos(b)-yy*sin(b), x*sin(b)+yy*cos(b))
+    center, radius = (982,220), 153
+    latitudes = []
+    for j in range(-7,8):
+        lat = j*pi/18
+        cy = project(0,radius*sin(lat),0)
+        u = project(radius*cos(lat),0,0)
+        v = project(0,0,radius*cos(lat))
+        d = ellipse_path((center[0]+cy[0],center[1]+cy[1]),u,v)
+        latitudes.append(f'<path d="{d}" stroke-opacity=".46"/>')
+    meridians = []
+    for j in range(7):
+        longitude = j*pi/7
+        u = project(radius*cos(longitude),0,radius*sin(longitude))
+        v = project(0,radius,0)
+        meridians.append(f'<path class="orb-meridian" d="{ellipse_path(center,u,v)}"/>')
+    angle = -26*pi/180
+    orbit = ellipse_path(center,(191*cos(angle),191*sin(angle)),(-46*sin(angle),46*cos(angle)))
+    start = (center[0]+191*cos(angle), center[1]+191*sin(angle))
+    return (f'<g id="orb-kinetic"><style>.orb-motion{{display:none}}.orb-still{{display:inline}}'
+            '.orb-wire-spin{transform-origin:982px 220px}'
+            '@media(prefers-reduced-motion:no-preference){.orb-motion{display:inline}.orb-still{display:none}.orb-wire-spin{animation:orb-wire-turn 36s linear infinite;will-change:transform}}'
+            '@keyframes orb-wire-turn{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}'
+            f'</style><defs><path id="orb-orbit-track" d="{orbit}"/></defs>'
+            f'<g clip-path="url(#orb)" fill="none" stroke="{wire}" stroke-width="1.1"><g class="orb-wire-spin">'
+            f'{"".join(latitudes)}<g stroke-opacity=".48">{"".join(meridians)}</g></g></g>'
+            f'<ellipse cx="982" cy="220" rx="191" ry="46" transform="rotate(-26 982 220)" stroke="{lime}" stroke-width="2" fill="none"/>'
+            f'<g class="orb-motion"><g class="orb-comet" fill="{lime}"><circle r="11" opacity=".12"/><circle r="6"/>'
+            '<animateMotion dur="8s" repeatCount="indefinite" calcMode="paced"><mpath href="#orb-orbit-track"/></animateMotion></g></g>'
+            f'<circle class="orb-still" cx="{start[0]:.2f}" cy="{start[1]:.2f}" r="6" fill="{lime}"/></g><!-- /orb-kinetic -->')
+
+
 for mode in ('dark','light'):
     path = ROOT / f'assets/hero-kinetic-{mode}.svg'
     source = (ROOT / f'assets/hero-{mode}.svg').read_text(encoding='utf-8')
-    # The original sphere oversamples every curve. At this banner size a 3x
-    # reduction stays below one pixel of curve error and cuts SVG paint work.
-    def simplify_wire(match):
-        commands = re.findall(r'[ML][^ML]+', match.group(1))
-        if len(commands) < 100:
-            return match.group(0)
-        kept = commands[::3]
-        if kept[-1] != commands[-1]:
-            kept.append(commands[-1])
-        return 'd="' + ' '.join(kept) + '" fill="none" stroke='
-    source = re.sub(r'd="(M[0-9., L-]+)" fill="none" stroke=',simplify_wire,source)
     replacement = make_name(mode)
     if '<g id="name-kinetic">' in source:
         source, count = re.subn(r'<g id="name-kinetic">.*?<!-- /name-kinetic -->',lambda _:replacement,source,flags=re.S)
@@ -144,6 +192,14 @@ for mode in ('dark','light'):
         source, count = re.subn(r'<text x="43" y="215"[^>]*>SQLVER<tspan[^>]*>_</tspan></text>',lambda _:replacement,source)
     if count != 1:
         raise SystemExit(f'{path}: expected exactly one name region, found {count}')
+    # Replace only the globe, its ring and satellite; the header layout stays.
+    source, count = re.subn(
+        r'<g clip-path="url\(#orb\)">.*?</g>\s*<ellipse cx="982".*?/>\s*<circle cx="1151".*?/>',
+        lambda _:make_orbit(mode),source,flags=re.S)
+    if count != 1:
+        raise SystemExit(f'{path}: expected one original globe region, found {count}')
+    source = source.replace('<rect x="760" y="60" width="420" height="305"/></clipPath>',
+                            '<rect x="760" y="58" width="420" height="316"/></clipPath>')
     source = source.replace('aria-label="Sqlver. Useful software.', 'aria-label="Sqlver / Kenaz. Useful software.')
     path.write_text(source,encoding='utf-8')
-    print(f'{path.name}: {len(source.encode()):,} bytes; 16s loop; two names; four effects per name')
+    print(f'{path.name}: {len(source.encode()):,} bytes; name loop + rotating globe + 8s orbit')

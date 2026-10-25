@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/hero-kinetic-dark.svg">
-  <img src="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/hero-kinetic-light.svg" alt="SQLVER / KENAZ — Useful software. Unreasonably good interfaces." width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/hero-kinetic-dark.svg?v=orbital-1">
+  <img src="https://raw.githubusercontent.com/xsqlverx/xsqlverx/main/assets/hero-kinetic-light.svg?v=orbital-1" alt="SQLVER / KENAZ — Useful software. Unreasonably good interfaces." width="100%">
 </picture>
 
 <p align="center">
